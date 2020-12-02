@@ -7,6 +7,9 @@ BINNAME := bin/aoc2020
 test:
 	go test
 
+bench:
+	go test -bench=.
+
 run: bin/aoc2020
 	./bin/aoc2020
 
