@@ -20,7 +20,7 @@ func Day2Solution1(puzzleInputs []string, completed chan bool) {
 }
 
 func day2Part1PolicyChecker(password string, policy passwordPolicy) bool {
-	matchCounts := strings.Count(password, policy.letter)
+	matchCounts := strings.Count(password, string(policy.letter))
 
 	return policy.lowCount <= matchCounts && matchCounts <= policy.highCount
 }
@@ -40,13 +40,8 @@ func Day2Solution2(puzzleInputs []string, completed chan bool) {
 }
 
 func day2Part2PolicyChecker(password string, policy passwordPolicy) bool {
-	explodedString := strings.Split(password, "")
+	firstLetter := rune(password[policy.lowCount-1])
+	secondLetter := rune(password[policy.highCount-1])
 
-	firstLetter := explodedString[policy.lowCount-1]
-	secondLetter := explodedString[policy.highCount-1]
-
-	firstLetterMatches := firstLetter == policy.letter
-	secondLetterMatches := secondLetter == policy.letter
-
-	return !(firstLetterMatches && secondLetterMatches) && (firstLetterMatches || secondLetterMatches)
+	return (firstLetter == policy.letter) != (secondLetter == policy.letter)
 }

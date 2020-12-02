@@ -8,14 +8,6 @@ const (
 	part2
 )
 
-type parter interface {
-	Part() part
-}
-
-func (p part) Part() part {
-	return p
-}
-
 type userSelections struct {
 	day  int
 	part part
@@ -24,7 +16,7 @@ type userSelections struct {
 type passwordPolicy struct {
 	lowCount  int
 	highCount int
-	letter    string
+	letter    rune
 }
 
 type passwordLine struct {
