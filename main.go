@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
+	"flag"
+	"fmt"
 	"log"
 	"os"
-	"sort"
-	"strconv"
 )
 
 func check(e error) {
@@ -14,25 +14,61 @@ func check(e error) {
 	}
 }
 
-func main() {
-	file, err := os.Open("inputs/day1_input.txt")
-	check(err)
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	var puzzleInput []int
-	doneCheck := make(chan bool)
+func getUserSelection() userSelections {
+	dayPtr := flag.Int("day", 0, "Which day's solution to check")
+	partPtr := flag.Int("part", 0, "Which part of the day's solution to run")
 
-	for scanner.Scan() {
-		number, err := strconv.Atoi(scanner.Text())
-		check(err)
-		puzzleInput = append(puzzleInput, number)
+	flag.Parse()
+	return userSelections{*dayPtr, part(*partPtr)}
+}
+
+func runPart(day int, part part, puzzleInput []string) {
+	log.SetPrefix(fmt.Sprintf("day%v ", day))
+	functionMapping := map[string]func([]string, chan bool){
+		"day1part1": Day1Solution1,
+		"day1part2": Day1Solution2,
+		"day2part1": Day2Solution1,
+		"day2part2": Day2Solution2,
+	}
+	var doneCheck = make(chan bool)
+
+	if part == allParts {
+		go functionMapping[fmt.Sprintf("day%vpart1", day)](puzzleInput, doneCheck)
+		go functionMapping[fmt.Sprintf("day%vpart2", day)](puzzleInput, doneCheck)
+		<-doneCheck
+		<-doneCheck
+
+		return
 	}
 
-	file.Close()
-	sort.Ints(puzzleInput)
+	go functionMapping[fmt.Sprintf("day%vpart%v", day, part)](puzzleInput, doneCheck)
+	<-doneCheck
+}
 
-	go Solution1(puzzleInput, doneCheck)
-	go Solution2(puzzleInput, doneCheck)
-	<-doneCheck
-	<-doneCheck
+func main() {
+	var daysToRun []int
+	selection := getUserSelection()
+
+	if selection.day == 0 {
+		daysToRun = []int{1, 2}
+	} else {
+		daysToRun = []int{selection.day}
+	}
+
+	for _, day := range daysToRun {
+		inputFileName := fmt.Sprintf("inputs/day%v_input.txt", day)
+		file, err := os.Open(inputFileName)
+		check(err)
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+		var puzzleInput []string
+
+		for scanner.Scan() {
+			puzzleInput = append(puzzleInput, scanner.Text())
+		}
+
+		file.Close()
+
+		runPart(day, selection.part, puzzleInput)
+	}
 }

@@ -3,11 +3,12 @@ package main
 type part int
 
 const (
-	Part1 part = iota
-	Part2
+	allParts part = iota
+	part1
+	part2
 )
 
-type Parter interface {
+type parter interface {
 	Part() part
 }
 
@@ -15,8 +16,19 @@ func (p part) Part() part {
 	return p
 }
 
-type Puzzle struct {
-	PuzzleInput []string
-	completed   bool
-	part        part
+type userSelections struct {
+	day  int
+	part part
+}
+
+type passwordPolicy struct {
+	lowCount  int
+	highCount int
+	letter    string
+}
+
+type passwordLine struct {
+	policy   passwordPolicy
+	password string
+	valid    bool
 }
