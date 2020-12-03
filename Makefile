@@ -7,7 +7,7 @@ BINNAME := bin/aoc2020
 test:
 	go test
 
-bench:
+bench: clean
 	go test -bench=.
 
 run: bin/aoc2020
@@ -19,4 +19,4 @@ $(BINNAME): $(GOFILES)
 	$(GOBUILD) -o $(BINNAME) $(GOFILES)
 
 clean:
-	rm $(BINNAME)
+	rm -f $(BINNAME)
