@@ -16,10 +16,9 @@ func check(e error) {
 
 func getUserSelection() userSelections {
 	dayPtr := flag.Int("day", 0, "Which day's solution to check")
-	partPtr := flag.Int("part", 0, "Which part of the day's solution to run")
 
 	flag.Parse()
-	return userSelections{*dayPtr, part(*partPtr)}
+	return userSelections{*dayPtr, allParts}
 }
 
 func runPart(day int, part part, puzzleInput []string) {
@@ -29,6 +28,8 @@ func runPart(day int, part part, puzzleInput []string) {
 		"day1part2": Day1Solution2,
 		"day2part1": Day2Solution1,
 		"day2part2": Day2Solution2,
+		"day3part1": Day3Solution1,
+		"day3part2": Day3Solution2,
 	}
 	var results = make(chan string)
 
@@ -50,15 +51,14 @@ func main() {
 	selection := getUserSelection()
 
 	if selection.day == 0 {
-		daysToRun = []int{1, 2}
+		daysToRun = []int{1, 2, 3}
 	} else {
 		daysToRun = []int{selection.day}
 	}
 
 	for _, day := range daysToRun {
 		inputFileName := fmt.Sprintf("inputs/day%v_input.txt", day)
-		file, err := os.Open(inputFileName)
-		check(err)
+		file, _ := os.Open(inputFileName)
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
 		var puzzleInput []string
