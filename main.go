@@ -61,13 +61,12 @@ func main() {
 		file, _ := os.Open(inputFileName)
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
+		defer file.Close()
 		var puzzleInput []string
 
 		for scanner.Scan() {
 			puzzleInput = append(puzzleInput, scanner.Text())
 		}
-
-		file.Close()
 
 		runPart(day, selection.part, puzzleInput)
 	}
