@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"strings"
 )
 
 // Day2Solution1 finds the number of valid passwords in the list
-func Day2Solution1(puzzleInputs []string, completed chan bool) {
+func Day2Solution1(puzzleInputs []string, results chan string) {
 	validPasswords := 0
 
 	for _, rawLine := range puzzleInputs {
@@ -15,8 +15,7 @@ func Day2Solution1(puzzleInputs []string, completed chan bool) {
 		}
 	}
 
-	log.Printf("Number of valid passwords: %v", validPasswords)
-	completed <- true
+	results <- fmt.Sprintf("part1: Number of valid passwords: %v", validPasswords)
 }
 
 func day2Part1PolicyChecker(password string, policy passwordPolicy) bool {
@@ -26,7 +25,7 @@ func day2Part1PolicyChecker(password string, policy passwordPolicy) bool {
 }
 
 // Day2Solution2 finds the number of valid passwords with the new set of rules
-func Day2Solution2(puzzleInputs []string, completed chan bool) {
+func Day2Solution2(puzzleInputs []string, results chan string) {
 	validPasswords := 0
 
 	for _, rawLine := range puzzleInputs {
@@ -35,8 +34,7 @@ func Day2Solution2(puzzleInputs []string, completed chan bool) {
 		}
 	}
 
-	log.Printf("Number of valid passwords: %v", validPasswords)
-	completed <- true
+	results <- fmt.Sprintf("part2: Number of valid passwords: %v", validPasswords)
 }
 
 func day2Part2PolicyChecker(password string, policy passwordPolicy) bool {

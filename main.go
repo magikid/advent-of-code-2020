@@ -24,25 +24,25 @@ func getUserSelection() userSelections {
 
 func runPart(day int, part part, puzzleInput []string) {
 	log.SetPrefix(fmt.Sprintf("day%v ", day))
-	functionMapping := map[string]func([]string, chan bool){
+	functionMapping := map[string]func([]string, chan string){
 		"day1part1": Day1Solution1,
 		"day1part2": Day1Solution2,
 		"day2part1": Day2Solution1,
 		"day2part2": Day2Solution2,
 	}
-	var doneCheck = make(chan bool)
+	var results = make(chan string)
 
 	if part == allParts {
-		go functionMapping[fmt.Sprintf("day%vpart1", day)](puzzleInput, doneCheck)
-		go functionMapping[fmt.Sprintf("day%vpart2", day)](puzzleInput, doneCheck)
-		<-doneCheck
-		<-doneCheck
+		go functionMapping[fmt.Sprintf("day%vpart1", day)](puzzleInput, results)
+		go functionMapping[fmt.Sprintf("day%vpart2", day)](puzzleInput, results)
+		log.Print(<-results)
+		log.Print(<-results)
 
 		return
 	}
 
-	go functionMapping[fmt.Sprintf("day%vpart%v", day, part)](puzzleInput, doneCheck)
-	<-doneCheck
+	go functionMapping[fmt.Sprintf("day%vpart%v", day, part)](puzzleInput, results)
+	log.Print(<-results)
 }
 
 func main() {
