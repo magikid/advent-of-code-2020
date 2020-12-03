@@ -20,12 +20,13 @@ func makeTree(j rune) tree {
 func buildTreeMap(input []string) *treeMap {
 	var unfinishedMap [][]tree
 	newRow := make([]tree, len(input[0]))
+	unfinishedMap = make([][]tree, len(input))
 
-	for _, row := range input {
+	for irow, row := range input {
 		for icol, column := range row {
 			newRow[icol] = makeTree(column)
 		}
-		unfinishedMap = append(unfinishedMap, newRow)
+		unfinishedMap[irow] = newRow
 		newRow = make([]tree, len(row))
 	}
 
