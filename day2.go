@@ -5,12 +5,28 @@ import (
 	"strings"
 )
 
+func fastPolicyChecker(lines <-chan string, passwords chan<- passwordLine) {
+	for rawLine := range lines {
+		passwords <- policyCheck(rawLine, day2Part1PolicyChecker)
+	}
+	close(passwords)
+}
+
 // Day2Solution1 finds the number of valid passwords in the list
 func Day2Solution1(puzzleInputs []string, results chan string) {
 	validPasswords := 0
+	lines := make(chan string, len(puzzleInputs))
+	passwords := make(chan passwordLine)
 
 	for _, rawLine := range puzzleInputs {
-		if policyCheck(rawLine, day2Part1PolicyChecker).valid {
+		lines <- rawLine
+	}
+	close(lines)
+
+	go fastPolicyChecker(lines, passwords)
+
+	for password := range passwords {
+		if password.valid {
 			validPasswords++
 		}
 	}
