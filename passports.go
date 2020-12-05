@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"strconv"
@@ -13,7 +14,7 @@ type year struct {
 }
 
 func buildYear(inputYear string) *year {
-	if inputYear == "" {
+	if inputYear == "" || len(inputYear) < 4 {
 		return nil
 	}
 
@@ -24,10 +25,6 @@ func buildYear(inputYear string) *year {
 }
 
 func (y *year) Year() int {
-	// if y == nil {
-	// 	return 0
-	// }
-
 	return y.year.Year()
 }
 
@@ -101,32 +98,53 @@ func (p *passport) ValidHeight() bool {
 }
 
 func (p *passport) ValidHairColor() bool {
-	var hex1, hex2, hex3 int
+	var hex1, hex2, hex3 []byte
 	var err error
 
 	if p.hairColor[0] != '#' {
 		return false
 	}
 
-	_, err = fmt.Sscanf(p.hairColor, "#%02x%02x%02x", &hex1, &hex2, &hex3)
-	check(err)
+	hairColor := p.hairColor[1:]
+	hex1, err = hex.DecodeString(hairColor[0:2])
+	if err != nil {
+		return false
+	}
+	hex2, err = hex.DecodeString(hairColor[2:4])
+	if err != nil {
+		return false
+	}
+	hex3, err = hex.DecodeString(hairColor[4:6])
+	if err != nil {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
 	return &hex1 != nil && &hex2 != nil && &hex3 != nil
 }
 
 func (p *passport) ValidEyeColor() bool {
 	switch p.eyeColor {
 	case "amb":
+		fallthrough
 	case "blu":
+		fallthrough
 	case "brn":
+		fallthrough
 	case "gry":
+		fallthrough
 	case "grn":
+		fallthrough
 	case "hzl":
+		fallthrough
 	case "oth":
 		return true
 	default:
 		return false
 	}
-	return false
 }
 
 func (p *passport) ValidPassportID() bool {
@@ -159,9 +177,22 @@ func (p *passport) FullyValid() bool {
 		p.ValidIssueYear() &&
 		p.ValidExpirationYear() &&
 		p.ValidHeight() &&
-		p.ValidHeight() &&
+		p.ValidHairColor() &&
 		p.ValidEyeColor() &&
 		p.ValidPassportID()
+}
+
+func (p *passport) InvalidFields() string {
+	return fmt.Sprintf("mostly valid: %v, birthYear: %v, issueYear: %v, expirationYear: %v, height: %v, hairColor: %v, eyeColor: %v, passportId: %v",
+		p.MostlyValid(),
+		p.ValidBirthYear(),
+		p.ValidIssueYear(),
+		p.ValidExpirationYear(),
+		p.ValidHeight(),
+		p.ValidHairColor(),
+		p.ValidEyeColor(),
+		p.ValidPassportID(),
+	)
 }
 
 func (p *passport) String() string {
