@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -10,6 +11,10 @@ type seatAssignment struct {
 	column               int
 	id                   int
 	binarySpacePartition string
+}
+
+func (s seatAssignment) String() string {
+	return fmt.Sprintf("seat row: %v, col: %v, id: %v", s.row, s.column, s.id)
 }
 
 func makeBinary(input string, zero rune, one rune) int {

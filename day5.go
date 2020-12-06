@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // Day5Solution1 finding the max seat id
 func Day5Solution1(input []string, done chan string) {
@@ -25,5 +28,25 @@ func Day5Solution1(input []string, done chan string) {
 
 // Day5Solution2 WIP
 func Day5Solution2(input []string, done chan string) {
-	done <- "part2"
+	var seats []seatAssignment
+
+	for _, input := range input {
+		seats = append(seats, makeSeatAssignment(input))
+	}
+	sort.SliceStable(seats, func(i int, j int) bool {
+		return seats[i].id < seats[j].id
+	})
+
+	lowestID := seats[0].id
+	sumOfIDsUpToLowest := (lowestID * (lowestID + 1)) / 2
+	highestID := seats[len(seats)-1].id
+	sumOfIDsUpToHighest := (highestID * (highestID + 1)) / 2
+	sumOfIdsShouldBe := sumOfIDsUpToHighest - sumOfIDsUpToLowest
+	seatIDActualSum := 0
+	for _, seat := range seats {
+		seatIDActualSum += seat.id
+	}
+	indexOfSeatWithIDOneHigherThanMissingSeat := sumOfIdsShouldBe - seatIDActualSum
+
+	done <- fmt.Sprintf("part2: missing seat id %v", seats[indexOfSeatWithIDOneHigherThanMissingSeat].id-1)
 }
