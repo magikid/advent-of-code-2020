@@ -1,4 +1,4 @@
-package main
+package day3
 
 type tree bool
 

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"magikid/advent-of-code-2020/day3"
 	"os"
 )
 
@@ -28,8 +29,8 @@ func runPart(day int, part part, puzzleInput []string) {
 		"day1part2": Day1Solution2,
 		"day2part1": Day2Solution1,
 		"day2part2": Day2Solution2,
-		"day3part1": Day3Solution1,
-		"day3part2": Day3Solution2,
+		"day3part1": day3.Day3Solution1,
+		"day3part2": day3.Day3Solution2,
 		"day4part1": Day4Solution1,
 		"day4part2": Day4Solution2,
 		"day5part1": Day5Solution1,
