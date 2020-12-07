@@ -1,87 +1,76 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"strings"
+
+	"github.com/emirpasic/gods/trees/avltree"
 )
 
-type ruleTree struct {
-	left     *ruleTree
-	maxLeft  int
+type subRule struct {
+	color      string
+	bagsInside int
+}
+
+func (r subRule) String() string {
+	return fmt.Sprintf("rule color: %v, bags inside: %v;", r.color, r.bagsInside)
+}
+
+type colorRule struct {
+	subRules []subRule
 	color    string
-	right    *ruleTree
-	maxRight int
 }
 
-type rules []*ruleTree
+func makeRule(ruleString string) *colorRule {
+	bags := strings.Split(ruleString, " bags contain ")
 
-func (r rules) String() {
-	for _, rt := range r {
-		channel := walker(rt)
-		for value := range channel {
-			log.Print(value)
+	otherBagString := bags[1]
+
+	otherBagStrings := strings.Split(otherBagString, ",")
+	otherBags := make([]subRule, len(otherBagStrings))
+	var otherBagQuantity int
+	var otherBagModifier, otherBagColor string
+
+	for i, bag := range otherBagStrings {
+		if bag == "no other bags." {
+			otherBags[i] = subRule{color: "none", bagsInside: 0}
+			continue
 		}
-	}
-}
 
-func walk(t *ruleTree, ch chan string) {
-	if t == nil {
-		return
-	}
-	walk(t.left, ch)
-	ch <- t.color
-	walk(t.right, ch)
-}
-
-func walker(t *ruleTree) <-chan string {
-	ch := make(chan string)
-	go func() {
-		walk(t, ch)
-		close(ch)
-	}()
-
-	return ch
-}
-
-func compare(t1, t2 *ruleTree) bool {
-	c1, c2 := walker(t1), walker(t2)
-	for {
-		v1, ok1 := <-c1
-		v2, ok2 := <-c2
-		if !ok1 || !ok2 {
-			return ok1 == ok2
+		fmt.Sscanf(bag, "%d %s %s bag", &otherBagQuantity, &otherBagModifier, &otherBagColor)
+		if otherBagQuantity == 0 || otherBagModifier == "" || otherBagColor == "" {
+			log.Fatalf("Couldn't parse bag line: %v", bag)
 		}
-		if v1 != v2 {
-			break
+
+		otherBags[i] = subRule{color: otherBagModifier + " " + otherBagColor, bagsInside: otherBagQuantity}
+	}
+
+	return &colorRule{color: bags[0], subRules: otherBags}
+}
+
+func findAllRules(input []string) map[string][]subRule {
+	rules := make(map[string][]subRule)
+	for _, row := range input {
+		rule := makeRule(row)
+		rules[rule.color] = rule.subRules
+	}
+
+	return rules
+}
+
+func findAllRules2(input []string) *avltree.Tree {
+	rules := avltree.NewWithStringComparator()
+	for _, row := range input {
+		rule := makeRule(row)
+		for _, subRule := range rule.subRules {
+			rules.Put(subRule.color, subRule.bagsInside)
 		}
-	}
+		// if value, found := rules.Get(rule.color) {
+		// 	if found {
 
-	return false
-}
-
-func insert(t *ruleTree, v string) *ruleTree {
-	if t == nil {
-		return &ruleTree{nil, 0, v, nil, 0}
-	}
-	if v < t.color {
-		t.left = insert(t.left, v)
-		return t
-	}
-	t.right = insert(t.right, v)
-	return t
-}
-
-func buildRules(input []string) rules {
-	var rules rules
-	var ruleTree *ruleTree
-
-	if len(input) < 1 {
-		return rules
-	}
-
-	ruleTree = insert(ruleTree, input[0])
-	for i := 1; i < len(input); i++ {
-		ruleTree = insert(ruleTree, input[i])
-		rules = append(rules, ruleTree)
+		// 	}
+		// }
 	}
 
 	return rules
