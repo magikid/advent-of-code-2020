@@ -36,6 +36,8 @@ func runPart(day int, part part, puzzleInput []string) {
 		"day5part2": Day5Solution2,
 		"day6part1": Day6Solution1,
 		"day6part2": Day6Solution2,
+		"day7part1": Day7Solution1,
+		"day7part2": Day7Solution2,
 	}
 	var results = make(chan string)
 
@@ -57,7 +59,7 @@ func main() {
 	selection := getUserSelection()
 
 	if selection.day == 0 {
-		daysToRun = []int{1, 2, 3, 4, 5, 6}
+		daysToRun = []int{1, 2, 3, 4, 5, 6, 7}
 	} else {
 		daysToRun = []int{selection.day}
 	}
