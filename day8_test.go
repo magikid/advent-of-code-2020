@@ -81,5 +81,36 @@ func TestBootConsole(t *testing.T) {
 	console := buildCPU(inputInstructions)
 	output := console.Boot()
 
-	assert.Equal(t, "Infinite loop detected! Accumulator: 5", output)
+	assert.Contains(t, output, "Accumulator: 5")
+	assert.Contains(t, output, "Last Instruction: jmp -3")
+}
+
+func TestSuccessfulProgram(t *testing.T) {
+	inputInstructions := []string{
+		"nop +0",
+		"acc +1",
+		"acc +1",
+	}
+	console := buildCPU(inputInstructions)
+	output := console.Boot()
+
+	assert.Contains(t, output, "success")
+}
+
+func TestCorrectErrors(t *testing.T) {
+	inputInstructions := []string{
+		"nop +0",
+		"acc +1",
+		"jmp +4",
+		"acc +3",
+		"jmp -3",
+		"acc -99",
+		"acc +1",
+		"jmp -4",
+		"acc +6",
+	}
+	console := buildCPU(inputInstructions)
+	output := console.CorrectErrors()
+	assert.Contains(t, output, "success")
+	assert.Equal(t, 8, console.accumulator)
 }

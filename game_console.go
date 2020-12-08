@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -10,6 +11,10 @@ type instruction struct {
 	operation string
 	argument  int
 	visited   bool
+}
+
+func (i *instruction) String() string {
+	return fmt.Sprintf("%v %v", i.operation, i.argument)
 }
 
 func buildInstructions(input *[]string) []*instruction {
@@ -30,18 +35,22 @@ func buildInstructions(input *[]string) []*instruction {
 }
 
 type cpu struct {
-	instructions []*instruction
-	accumulator  int
-	currentIndex int
-	halted       bool
-	err          error
+	instructions            []*instruction
+	accumulator             int
+	currentIndex            int
+	lastInstructionExecuted *instruction
+	halted                  bool
+	output                  string
+	input                   []string
+	debug                   bool
 }
 
 func buildCPU(input []string) *cpu {
 	console := cpu{}
 	console.accumulator = 0
 	console.currentIndex = 0
-	console.instructions = buildInstructions(&input)
+	console.input = input
+	console.instructions = buildInstructions(&console.input)
 	console.halted = false
 
 	return &console
@@ -52,27 +61,88 @@ func (console *cpu) Next() {
 }
 
 func (console *cpu) Tick() {
-	currentInstruction := console.instructions[console.currentIndex]
-	if currentInstruction.visited || console.halted {
+	if console.currentIndex >= len(console.instructions) {
 		console.halted = true
-		console.err = fmt.Errorf("Infinite loop detected! Accumulator: %v", console.accumulator)
+		console.output = fmt.Sprintf("OUT Program terminated successfully, Accumulator: %v", console.accumulator)
+		return
 	}
 
+	currentInstruction := console.instructions[console.currentIndex]
+
+	if currentInstruction.visited {
+		console.halted = true
+		console.output = fmt.Sprintf("ERR Infinite loop detected! Last Instruction: %v, Accumulator: %v", console.lastInstructionExecuted, console.accumulator)
+		return
+	}
+
+	console.lastInstructionExecuted = currentInstruction
 	switch currentInstruction.operation {
 	case "acc":
 		console.accumulator += currentInstruction.argument
+		currentInstruction.visited = true
 	case "jmp":
 		console.currentIndex += currentInstruction.argument
+		currentInstruction.visited = true
 		return
 	case "nop":
+		currentInstruction.visited = true
 	}
-	currentInstruction.visited = true
 	console.Next()
 }
 
 func (console *cpu) Boot() string {
 	for !console.halted {
+		if console.debug && console.currentIndex < len(console.instructions) {
+			log.Printf("%v %v", console.currentIndex, console.instructions[console.currentIndex])
+		}
 		console.Tick()
 	}
-	return console.err.Error()
+	return console.output
+}
+
+func (console *cpu) Reset() {
+	console.accumulator = 0
+	console.currentIndex = 0
+	console.halted = false
+	console.output = ""
+	console.lastInstructionExecuted = nil
+	console.instructions = buildInstructions(&console.input)
+}
+
+func (console *cpu) CorrectErrors() string {
+	var nopIndexes, jmpIndexes []int
+	for i, inst := range console.instructions {
+		switch inst.operation {
+		case "nop":
+			nopIndexes = append(nopIndexes, i)
+		case "jmp":
+			jmpIndexes = append(jmpIndexes, i)
+		default:
+			continue
+		}
+	}
+
+	for _, nopIndex := range nopIndexes {
+		console.Reset()
+		oldInstruction := console.instructions[nopIndex]
+		newInstruction := instruction{operation: "jmp", argument: oldInstruction.argument, visited: false}
+		console.instructions[nopIndex] = &newInstruction
+		output := console.Boot()
+		if strings.Contains(output, "success") {
+			return output
+		}
+	}
+
+	for _, jmpIndex := range jmpIndexes {
+		console.Reset()
+		oldInstruction := console.instructions[jmpIndex]
+		newInstruction := instruction{operation: "nop", argument: oldInstruction.argument, visited: false}
+		console.instructions[jmpIndex] = &newInstruction
+		output := console.Boot()
+		if strings.Contains(output, "success") {
+			return output
+		}
+	}
+
+	return ""
 }
