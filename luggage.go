@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/emirpasic/gods/trees/avltree"
+	"github.com/emirpasic/gods/sets/treeset"
 )
 
 type subRule struct {
@@ -20,6 +20,20 @@ func (r subRule) String() string {
 type colorRule struct {
 	subRules []subRule
 	color    string
+}
+
+func (c *colorRule) String() string {
+	return fmt.Sprintf("rule color: %v, subRules: %v;", c.color, c.subRules)
+}
+
+func (c *colorRule) contains(needle string) bool {
+	for _, subRule := range c.subRules {
+		if subRule.color == needle {
+			return true
+		}
+	}
+
+	return false
 }
 
 func makeRule(ruleString string) *colorRule {
@@ -59,19 +73,35 @@ func findAllRules(input []string) map[string][]subRule {
 	return rules
 }
 
-func findAllRules2(input []string) *avltree.Tree {
-	rules := avltree.NewWithStringComparator()
+func findRulesContaining(input []string, needle string) *treeset.Set {
+
+	bags := make(map[string]*treeset.Set)
+
 	for _, row := range input {
 		rule := makeRule(row)
 		for _, subRule := range rule.subRules {
-			rules.Put(subRule.color, subRule.bagsInside)
-		}
-		// if value, found := rules.Get(rule.color) {
-		// 	if found {
+			currentRule, ok := bags[subRule.color]
+			if !ok {
+				currentRule = treeset.NewWithStringComparator()
+			}
+			currentRule.Add(rule.color)
+			bags[subRule.color] = currentRule
 
-		// 	}
-		// }
+			otherColors, ok := bags[subRule.color]
+			if ok {
+				for _, color := range otherColors.Values() {
+					otherColors, ok := bags[color.(string)]
+					if ok {
+						for _, newColor := range otherColors.Values() {
+							nextColor := bags[subRule.color]
+							nextColor.Add(newColor)
+						}
+
+					}
+				}
+			}
+		}
 	}
 
-	return rules
+	return bags[needle]
 }
