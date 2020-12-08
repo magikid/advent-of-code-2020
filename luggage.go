@@ -103,5 +103,31 @@ func findRulesContaining(input []string, needle string) *treeset.Set {
 		}
 	}
 
+	for _, row := range input {
+		rule := makeRule(row)
+		for _, subRule := range rule.subRules {
+			currentRule, ok := bags[subRule.color]
+			if !ok {
+				currentRule = treeset.NewWithStringComparator()
+			}
+			currentRule.Add(rule.color)
+			bags[subRule.color] = currentRule
+
+			otherColors, ok := bags[subRule.color]
+			if ok {
+				for _, color := range otherColors.Values() {
+					otherColors, ok := bags[color.(string)]
+					if ok {
+						for _, newColor := range otherColors.Values() {
+							nextColor := bags[subRule.color]
+							nextColor.Add(newColor)
+						}
+
+					}
+				}
+			}
+		}
+	}
+
 	return bags[needle]
 }
