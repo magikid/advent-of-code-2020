@@ -8,90 +8,25 @@ import (
 	"strings"
 )
 
-type subRule struct {
+type innerBag struct {
 	color      string
 	bagsInside int
 }
 
-func (r subRule) String() string {
-	return fmt.Sprintf("rule color: %v, bags inside: %v;", r.color, r.bagsInside)
+func (r innerBag) String() string {
+	return fmt.Sprintf("color: %v, bags inside: %v;", r.color, r.bagsInside)
 }
 
-func makeSubRule(color string, quantityFromRegexp string) subRule {
+func makeInnerBag(color string, quantityFromRegexp string) innerBag {
 	quantity, _ := strconv.Atoi(quantityFromRegexp)
-	return subRule{color: color, bagsInside: quantity}
+	return innerBag{color: color, bagsInside: quantity}
 }
 
-type colorRule struct {
-	subRules []subRule
-	color    string
-}
-
-func (c *colorRule) SubColors() []string {
-	colors := make([]string, len(c.subRules))
-	for i, rule := range c.subRules {
-		colors[i] = rule.color
-	}
-
-	return colors
-}
-
-func (c *colorRule) String() string {
-	return fmt.Sprintf("rule color: %v, subRules: %v;", c.color, c.subRules)
-}
-
-func (c *colorRule) contains(needle string) bool {
-	for _, subRule := range c.subRules {
-		if subRule.color == needle {
-			return true
-		}
-	}
-
-	return false
-}
-
-func makeRule(ruleString string) *colorRule {
-	bags := strings.Split(ruleString, " bags contain ")
-
-	otherBagString := bags[1]
-
-	otherBagStrings := strings.Split(otherBagString, ",")
-	otherBags := make([]subRule, len(otherBagStrings))
-	var otherBagQuantity int
-	var otherBagModifier, otherBagColor string
-
-	for i, bag := range otherBagStrings {
-		if bag == "no other bags." {
-			otherBags[i] = subRule{color: "none", bagsInside: 0}
-			continue
-		}
-
-		fmt.Sscanf(bag, "%d %s %s bag", &otherBagQuantity, &otherBagModifier, &otherBagColor)
-		if otherBagQuantity == 0 || otherBagModifier == "" || otherBagColor == "" {
-			log.Fatalf("Couldn't parse bag line: %v", bag)
-		}
-
-		otherBags[i] = subRule{color: otherBagModifier + " " + otherBagColor, bagsInside: otherBagQuantity}
-	}
-
-	return &colorRule{color: bags[0], subRules: otherBags}
-}
-
-func findAllRules(input []string) map[string][]subRule {
-	rules := make(map[string][]subRule)
-	for _, row := range input {
-		rule := makeRule(row)
-		rules[rule.color] = rule.subRules
-	}
-
-	return rules
-}
-
-func findRules(input []string) (map[string][]subRule, map[string][]string) {
+func findBags(input []string) (map[string][]innerBag, map[string][]string) {
 	mainRuleRegexp := regexp.MustCompile(`^([a-z ]+) bags contain ([a-z0-9, ]+)\.$`)
 	subRuleRegexp := regexp.MustCompile(`^(\d) ([a-z ]+) bags?$`)
 
-	contains := make(map[string][]subRule)
+	contains := make(map[string][]innerBag)
 	containedBy := make(map[string][]string)
 
 	for _, line := range input {
@@ -109,7 +44,7 @@ func findRules(input []string) (map[string][]subRule, map[string][]string) {
 			if innerBagContents == nil {
 				log.Panicf("Failed to parse inner bag: %v", innerBag)
 			}
-			bag := makeSubRule(innerBagContents[2], innerBagContents[1])
+			bag := makeInnerBag(innerBagContents[2], innerBagContents[1])
 			contains[outerBag] = append(contains[outerBag], bag)
 			containedBy[bag.color] = append(containedBy[bag.color], outerBag)
 		}
@@ -118,8 +53,8 @@ func findRules(input []string) (map[string][]subRule, map[string][]string) {
 	return contains, containedBy
 }
 
-func findRulesContaining(input []string, needle string) []string {
-	_, containedBy := findRules(input)
+func findBagsContaining(input []string, needle string) []string {
+	_, containedBy := findBags(input)
 	canContain := containedBy[needle]
 	seen := make(map[string]bool)
 	seen[needle] = true

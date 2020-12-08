@@ -6,20 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMakeRule(t *testing.T) {
-	testRule := makeRule("light red bags contain 1 bright white bag, 2 muted yellow bags.")
-	expectedSubRules := []subRule{{color: "bright white", bagsInside: 1}, {color: "muted yellow", bagsInside: 2}}
-
-	assert.Equal(t, expectedSubRules, testRule.subRules)
-	assert.Equal(t, "light red", testRule.color)
-
-	testRule2 := makeRule("bright white bags contain 1 shiny gold bag.")
-	expectedSubRule := []subRule{{color: "shiny gold", bagsInside: 1}}
-	assert.Equal(t, expectedSubRule, testRule2.subRules)
-	assert.Equal(t, "bright white", testRule2.color)
-}
-
-func TestMakeManyRules(t *testing.T) {
+func TestBagsContaining(t *testing.T) {
 	rawRules := []string{
 		"light red bags contain 1 bright white bag, 2 muted yellow bags.",
 		"dark orange bags contain 3 bright white bags, 4 muted yellow bags.",
@@ -32,9 +19,8 @@ func TestMakeManyRules(t *testing.T) {
 		"dotted black bags contain no other bags.",
 	}
 
-	formattedRules := findAllRules(rawRules)
-	assert.Equal(t, 9, len(formattedRules))
-	assert.Equal(t, []subRule{{"none", 0}}, formattedRules["faded blue"])
+	formattedRules := findBagsContaining(rawRules, "shiny gold")
+	assert.Equal(t, 4, len(formattedRules))
 }
 
 func TestRulesContaining(t *testing.T) {
