@@ -51,7 +51,7 @@ func TestRulesContaining(t *testing.T) {
 	}
 
 	formattedRules := findRulesContaining(rawRules, "shiny gold")
-	assert.Equal(t, 4, len(formattedRules.Values()))
+	assert.Equal(t, 4, len(formattedRules))
 }
 
 func TestContains(t *testing.T) {

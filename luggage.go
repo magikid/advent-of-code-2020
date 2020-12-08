@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
-
-	"github.com/emirpasic/gods/sets/treeset"
 )
 
 type subRule struct {
@@ -17,9 +17,23 @@ func (r subRule) String() string {
 	return fmt.Sprintf("rule color: %v, bags inside: %v;", r.color, r.bagsInside)
 }
 
+func makeSubRule(color string, quantityFromRegexp string) subRule {
+	quantity, _ := strconv.Atoi(quantityFromRegexp)
+	return subRule{color: color, bagsInside: quantity}
+}
+
 type colorRule struct {
 	subRules []subRule
 	color    string
+}
+
+func (c *colorRule) SubColors() []string {
+	colors := make([]string, len(c.subRules))
+	for i, rule := range c.subRules {
+		colors[i] = rule.color
+	}
+
+	return colors
 }
 
 func (c *colorRule) String() string {
@@ -73,61 +87,62 @@ func findAllRules(input []string) map[string][]subRule {
 	return rules
 }
 
-func findRulesContaining(input []string, needle string) *treeset.Set {
+func findRules(input []string) (map[string][]subRule, map[string][]string) {
+	mainRuleRegexp := regexp.MustCompile(`^([a-z ]+) bags contain ([a-z0-9, ]+)\.$`)
+	subRuleRegexp := regexp.MustCompile(`^(\d) ([a-z ]+) bags?$`)
 
-	bags := make(map[string]*treeset.Set)
+	contains := make(map[string][]subRule)
+	containedBy := make(map[string][]string)
 
-	for _, row := range input {
-		rule := makeRule(row)
-		for _, subRule := range rule.subRules {
-			currentRule, ok := bags[subRule.color]
-			if !ok {
-				currentRule = treeset.NewWithStringComparator()
+	for _, line := range input {
+		mainRule := mainRuleRegexp.FindStringSubmatch(line)
+		if mainRule == nil {
+			log.Panicf("Failed to parse outer bag line: %v", line)
+		}
+		outerBag := mainRule[1]
+		innerBags := strings.Split(mainRule[2], ", ")
+		for _, innerBag := range innerBags {
+			if innerBag == "no other bags" {
+				continue
 			}
-			currentRule.Add(rule.color)
-			bags[subRule.color] = currentRule
-
-			otherColors, ok := bags[subRule.color]
-			if ok {
-				for _, color := range otherColors.Values() {
-					otherColors, ok := bags[color.(string)]
-					if ok {
-						for _, newColor := range otherColors.Values() {
-							nextColor := bags[subRule.color]
-							nextColor.Add(newColor)
-						}
-
-					}
-				}
+			innerBagContents := subRuleRegexp.FindStringSubmatch(innerBag)
+			if innerBagContents == nil {
+				log.Panicf("Failed to parse inner bag: %v", innerBag)
 			}
+			bag := makeSubRule(innerBagContents[2], innerBagContents[1])
+			contains[outerBag] = append(contains[outerBag], bag)
+			containedBy[bag.color] = append(containedBy[bag.color], outerBag)
 		}
 	}
 
-	for _, row := range input {
-		rule := makeRule(row)
-		for _, subRule := range rule.subRules {
-			currentRule, ok := bags[subRule.color]
-			if !ok {
-				currentRule = treeset.NewWithStringComparator()
-			}
-			currentRule.Add(rule.color)
-			bags[subRule.color] = currentRule
+	return contains, containedBy
+}
 
-			otherColors, ok := bags[subRule.color]
-			if ok {
-				for _, color := range otherColors.Values() {
-					otherColors, ok := bags[color.(string)]
-					if ok {
-						for _, newColor := range otherColors.Values() {
-							nextColor := bags[subRule.color]
-							nextColor.Add(newColor)
-						}
-
-					}
-				}
-			}
+func findRulesContaining(input []string, needle string) []string {
+	_, containedBy := findRules(input)
+	canContain := containedBy[needle]
+	seen := make(map[string]bool)
+	seen[needle] = true
+	for len(canContain) > 0 {
+		curr := canContain[0]
+		canContain = canContain[1:]
+		if seen[curr] {
+			continue
 		}
+		seen[curr] = true
+		canContain = append(canContain, containedBy[curr]...)
 	}
 
-	return bags[needle]
+	i := 0
+	bagColors := make([]string, len(seen)-1)
+	for bagColor := range seen {
+		if bagColor == needle {
+			continue
+		}
+
+		bagColors[i] = bagColor
+		i++
+	}
+
+	return bagColors
 }
