@@ -12,6 +12,6 @@ func Day7Solution1(input []string, done chan string) {
 
 // Day7Solution2 WIP
 func Day7Solution2(input []string, done chan string) {
-	formattedRules := findBagsContaining(input, "shiny gold")
-	done <- fmt.Sprintf("part2 %v", len(formattedRules))
+	count := countBagsInside(input, "shiny gold")
+	done <- fmt.Sprintf("part2 bags inside %v shiny gold bag", count)
 }

@@ -23,7 +23,7 @@ func TestBagsContaining(t *testing.T) {
 	assert.Equal(t, 4, len(formattedRules))
 }
 
-func TestRulesContaining(t *testing.T) {
+func TestBagCounts(t *testing.T) {
 	rawRules := []string{
 		"light red bags contain 1 bright white bag, 2 muted yellow bags.",
 		"dark orange bags contain 3 bright white bags, 4 muted yellow bags.",
@@ -36,22 +36,16 @@ func TestRulesContaining(t *testing.T) {
 		"dotted black bags contain no other bags.",
 	}
 
-	formattedRules := findRulesContaining(rawRules, "shiny gold")
-	assert.Equal(t, 4, len(formattedRules))
-}
+	assert.Equal(t, 32, countBagsInside(rawRules, "shiny gold"))
 
-func TestContains(t *testing.T) {
-	testColorRule := colorRule{color: "shiny blue", subRules: []subRule{{color: "muted black", bagsInside: 1}}}
-	assert.False(t, testColorRule.contains("shiny black"))
-
-	testColorRule1 := colorRule{color: "dark orange", subRules: []subRule{{color: "faded blue", bagsInside: 1}}}
-	assert.True(t, testColorRule1.contains("faded blue"))
-}
-
-func BenchmarkMakeRule(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		makeRule("light red bags contain 1 bright white bag, 2 muted yellow bags.")
-		makeRule("faded blue bags contain no other bags.")
+	rawRules2 := []string{
+		"shiny gold bags contain 2 dark red bags.",
+		"dark red bags contain 2 dark orange bags.",
+		"dark orange bags contain 2 dark yellow bags.",
+		"dark yellow bags contain 2 dark green bags.",
+		"dark green bags contain 2 dark blue bags.",
+		"dark blue bags contain 2 dark violet bags.",
+		"dark violet bags contain no other bags.",
 	}
+	assert.Equal(t, 126, countBagsInside(rawRules2, "shiny gold"))
 }

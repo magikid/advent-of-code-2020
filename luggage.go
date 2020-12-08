@@ -9,17 +9,17 @@ import (
 )
 
 type innerBag struct {
-	color      string
-	bagsInside int
+	color string
+	count int
 }
 
 func (r innerBag) String() string {
-	return fmt.Sprintf("color: %v, bags inside: %v;", r.color, r.bagsInside)
+	return fmt.Sprintf("color: %v, bags inside: %v;", r.color, r.count)
 }
 
 func makeInnerBag(color string, quantityFromRegexp string) innerBag {
 	quantity, _ := strconv.Atoi(quantityFromRegexp)
-	return innerBag{color: color, bagsInside: quantity}
+	return innerBag{color: color, count: quantity}
 }
 
 func findBags(input []string) (map[string][]innerBag, map[string][]string) {
@@ -57,7 +57,6 @@ func findBagsContaining(input []string, needle string) []string {
 	_, containedBy := findBags(input)
 	canContain := containedBy[needle]
 	seen := make(map[string]bool)
-	seen[needle] = true
 	for len(canContain) > 0 {
 		curr := canContain[0]
 		canContain = canContain[1:]
@@ -69,15 +68,25 @@ func findBagsContaining(input []string, needle string) []string {
 	}
 
 	i := 0
-	bagColors := make([]string, len(seen)-1)
+	bagColors := make([]string, len(seen))
 	for bagColor := range seen {
-		if bagColor == needle {
-			continue
-		}
-
 		bagColors[i] = bagColor
 		i++
 	}
 
 	return bagColors
+}
+
+func countBagsInside(input []string, needle string) int {
+	contains, _ := findBags(input)
+	return countBagsRecursive(contains, needle)
+}
+
+func countBagsRecursive(contains map[string][]innerBag, needle string) int {
+	sum := 0
+	for _, bag := range contains[needle] {
+		sum += bag.count
+		sum += bag.count * countBagsRecursive(contains, bag.color)
+	}
+	return sum
 }
