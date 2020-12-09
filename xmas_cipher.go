@@ -5,10 +5,9 @@ import (
 	"strconv"
 )
 
-const cipherLength = 25
-
 type xmasCipher struct {
-	preamble       [cipherLength]int
+	preambleLength int
+	preamble       []int
 	contents       map[int]bool
 	weaknessTarget int
 }
@@ -18,10 +17,10 @@ func (cipher xmasCipher) String() string {
 }
 
 func (cipher *xmasCipher) UpdatePreamble(nextNumber int) {
-	var tempCipher [25]int
+	tempCipher := make([]int, cipher.preambleLength)
 
-	tempCipher[cipherLength-1] = nextNumber
-	for i := 0; i < cipherLength-1; i++ {
+	tempCipher[cipher.preambleLength-1] = nextNumber
+	for i := 0; i < cipher.preambleLength-1; i++ {
 		tempCipher[i] = cipher.preamble[i+1]
 	}
 
@@ -29,8 +28,7 @@ func (cipher *xmasCipher) UpdatePreamble(nextNumber int) {
 }
 
 func (cipher *xmasCipher) Add(nextNumber int) {
-
-	for i := 0; i < cipherLength; i++ {
+	for i := 0; i < cipher.preambleLength; i++ {
 		tempSum := nextNumber - cipher.preamble[i]
 		_, ok := cipher.contents[tempSum]
 		if ok {
@@ -60,21 +58,20 @@ func (cipher *xmasCipher) FindWeakness() int {
 	return 0
 }
 
-func makeXmasCipher(input []string) (xmasCipher, error) {
+func makeXmasCipherBase(input []string, preambleLength int) (xmasCipher, error) {
 	var err error
-	var preamble [cipherLength]int
+	preamble := make([]int, preambleLength)
 	contents := make(map[int]bool)
-	cipher := xmasCipher{contents: contents}
+	cipher := xmasCipher{contents: contents, preambleLength: preambleLength, preamble: preamble}
 
-	if len(input) < cipherLength {
+	if len(input) < cipher.preambleLength {
 		err = fmt.Errorf("Preable too small! %v", input)
 		return cipher, err
 	}
 
-	for i := 0; i < cipherLength; i++ {
-		preamble[i] = makeNumber(input[i])
+	for i := 0; i < cipher.preambleLength; i++ {
+		cipher.UpdatePreamble(makeNumber(input[i]))
 	}
-	cipher.preamble = preamble
 
 	for i := 25; i < len(input); i++ {
 		cipher.Add(makeNumber(input[i]))
@@ -84,6 +81,10 @@ func makeXmasCipher(input []string) (xmasCipher, error) {
 	}
 
 	return cipher, err
+}
+
+func makeXmasCipher(input []string) (xmasCipher, error) {
+	return makeXmasCipherBase(input, 25)
 }
 
 func makeNumber(input string) int {

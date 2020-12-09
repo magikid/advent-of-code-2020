@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExample(t *testing.T) {
+func TestExamplePart1(t *testing.T) {
 	exampleInput1 := make([]string, 25)
-	for i := 0; i < cipherLength; i++ {
+	for i := 0; i < 25; i++ {
 		exampleInput1[i] = fmt.Sprint(i + 1)
 	}
 	rand.Seed(time.Now().UnixNano())
@@ -43,4 +43,10 @@ func TestMakeXmasCipherTooSmall(t *testing.T) {
 
 	_, err := makeXmasCipher(input)
 	assert.Contains(t, err.Error(), "too small")
+}
+
+func TestExamplePart2(t *testing.T) {
+	exampleInput1 := []string{"1", "3", "5", "7", "9"}
+	cipher, _ := makeXmasCipher(exampleInput1)
+	cipher.Add(10)
 }
