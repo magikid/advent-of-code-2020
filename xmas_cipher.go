@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -58,15 +59,14 @@ func (cipher *xmasCipher) FindWeakness() int {
 	return 0
 }
 
-func makeXmasCipherBase(input []string, preambleLength int) (xmasCipher, error) {
-	var err error
+func makeXmasCipherBase(input []string, preambleLength int) xmasCipher {
 	preamble := make([]int, preambleLength)
 	contents := make(map[int]bool)
 	cipher := xmasCipher{contents: contents, preambleLength: preambleLength, preamble: preamble}
 
 	if len(input) < cipher.preambleLength {
-		err = fmt.Errorf("Preable too small! %v", input)
-		return cipher, err
+		log.Printf("Preable too small! %v", input)
+		return cipher
 	}
 
 	for i := 0; i < cipher.preambleLength; i++ {
@@ -76,14 +76,14 @@ func makeXmasCipherBase(input []string, preambleLength int) (xmasCipher, error) 
 	for i := 25; i < len(input); i++ {
 		cipher.Add(makeNumber(input[i]))
 		if cipher.Broken() {
-			return cipher, err
+			return cipher
 		}
 	}
 
-	return cipher, err
+	return cipher
 }
 
-func makeXmasCipher(input []string) (xmasCipher, error) {
+func makeXmasCipher(input []string) xmasCipher {
 	return makeXmasCipherBase(input, 25)
 }
 
