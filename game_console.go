@@ -111,7 +111,6 @@ func (console *cpu) Reset() {
 
 func (console *cpu) CorrectErrors() string {
 	var nopIndexes, jmpIndexes []int
-
 	for i, inst := range console.instructions {
 		switch inst.operation {
 		case "nop":
@@ -123,34 +122,27 @@ func (console *cpu) CorrectErrors() string {
 		}
 	}
 
-	output := make(chan string)
-	go fiddleWithInstructions(console, nopIndexes, output)
-	go fiddleWithInstructions(console, jmpIndexes, output)
-	close(output)
-
-	response1 := <-output
-	response2 := <-output
-
-	if response1 != "" {
-		return response1
+	for _, nopIndex := range nopIndexes {
+		console.Reset()
+		oldInstruction := console.instructions[nopIndex]
+		newInstruction := instruction{operation: "jmp", argument: oldInstruction.argument, visited: false}
+		console.instructions[nopIndex] = &newInstruction
+		output := console.Boot()
+		if strings.Contains(output, "success") {
+			return output
+		}
 	}
 
-	if response2 != "" {
-		return response2
+	for _, jmpIndex := range jmpIndexes {
+		console.Reset()
+		oldInstruction := console.instructions[jmpIndex]
+		newInstruction := instruction{operation: "nop", argument: oldInstruction.argument, visited: false}
+		console.instructions[jmpIndex] = &newInstruction
+		output := console.Boot()
+		if strings.Contains(output, "success") {
+			return output
+		}
 	}
 
 	return ""
-}
-
-func fiddleWithInstructions(console *cpu, indexes []int, output chan<- string) {
-	for _, index := range indexes {
-		console.Reset()
-		oldInstruction := console.instructions[index]
-		newInstruction := instruction{operation: "jmp", argument: oldInstruction.argument, visited: false}
-		console.instructions[index] = &newInstruction
-		response := console.Boot()
-		if strings.Contains(response, "success") {
-			output <- response
-		}
-	}
 }
