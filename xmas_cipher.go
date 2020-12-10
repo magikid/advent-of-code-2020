@@ -69,7 +69,7 @@ func (cipher *xmasCipher) FindWeakness() int {
 	}
 
 	for i := 0; i <= targetIndex; i++ {
-		for j := targetIndex; j > 0; j-- {
+		for j := i; j < targetIndex; j++ {
 			testRange := cipher.rawInput[i:j]
 			if sum(testRange) == cipher.weaknessTarget {
 				sort.Ints(testRange)
